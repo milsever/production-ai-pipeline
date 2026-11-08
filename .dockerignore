@@ -1,0 +1,43 @@
+# Git
+.git/
+.gitignore
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Generated vector database
+data/chroma/
+
+# Logs
+*.log
+
+# Source documents and local assets
+data/documents/
+assets/
+
+# Tests and monitoring configuration
+tests/
+monitoring/
+
+# Documentation
+README.md

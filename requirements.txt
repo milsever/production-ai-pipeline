@@ -1,0 +1,21 @@
+# Add application dependencies here.
+langchain
+langgraph
+langchain-chroma
+langchain-core
+langchain-huggingface
+langchain-ollama
+langchain-openai
+langchain-text-splitters
+sentence-transformers
+python-dotenv
+pydantic
+pydantic-settings
+fastapi
+uvicorn[standard]
+rank-bm25
+rich
+requests
+pypdf
+prometheus-client
+

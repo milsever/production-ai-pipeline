@@ -1,0 +1,115 @@
+
+services:
+  ai-service:
+    image: production-ai-service:local
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      CUSTOMER_API_BASE_URL: http://customer-api:8001
+      HF_HOME: /root/.cache/huggingface
+    volumes:
+      - ./data/chroma:/app/data/chroma
+      - hf-cache:/root/.cache/huggingface
+    depends_on:
+      customer-api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  customer-api:
+    image: production-ai-service:local
+    build: .
+    command:
+      - uvicorn
+      - rag_assistant.mock_customer_api:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8001"
+    expose:
+      - "8001"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    depends_on:
+      ai-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
+
+      GF_LOG_LEVEL: warn
+      GF_LOG_FILTERS: search-manifest-watcher:error
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:0.55.1
+    ports:
+      - "127.0.0.1:8081:8080"
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    command:
+      - "--docker_only=true"
+      - "--store_container_labels=false"
+      - "--disable_metrics=disk,referenced_memory"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    restart: unless-stopped
+
+volumes:
+  hf-cache:
+    external: true
+    name: production-ai-hf-cache
+
+  prometheus-data:
+  grafana-data:

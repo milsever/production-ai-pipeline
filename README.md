@@ -1,3 +1,5 @@
+[![CI](https://github.com/milsever/production-ai-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/milsever/production-ai-pipeline/actions/workflows/ci.yml)
+
 # Production AI Service & MLOps
 
 A production-oriented multi-agent AI service built with **Python, FastAPI, LangGraph, Docker, Prometheus, and Grafana**.

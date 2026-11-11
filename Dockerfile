@@ -21,9 +21,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 # Application source
 COPY src/ ./src/
-
-# Runtime directories
-RUN mkdir -p /app/data/chroma
+COPY data/chroma/ ./data/chroma/
 
 ENV PYTHONPATH=/app/src
 

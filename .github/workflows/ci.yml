@@ -6,6 +6,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -57,7 +58,7 @@ jobs:
           test -f data/chroma/chroma.sqlite3
 
       - name: Azure Login
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
@@ -65,18 +66,18 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Install Container Apps CLI extension
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: az extension add --name containerapp --upgrade
 
       - name: Build Docker image
         run: docker build -t production-ai-service:ci .
 
       - name: Login to Azure Container Registry
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: az acr login --name prodai20261109
 
       - name: Tag and Push Docker image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
           IMAGE="prodai20261109.azurecr.io/production-ai-service:${GITHUB_SHA}"
 
@@ -84,7 +85,7 @@ jobs:
           docker push "$IMAGE"
 
       - name: Deploy Customer API
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
           az containerapp update \
             --name ca-customer-api \
@@ -92,7 +93,7 @@ jobs:
             --image "prodai20261109.azurecr.io/production-ai-service:${GITHUB_SHA}"
 
       - name: Deploy AI Service
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
           az containerapp update \
             --name ca-production-ai-service \

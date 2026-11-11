@@ -67,6 +67,10 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Install Container Apps CLI extension
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: az extension add --name containerapp --upgrade
+
       - name: Login to Azure Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: az acr login --name prodai20261109

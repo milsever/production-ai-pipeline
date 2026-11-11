@@ -56,21 +56,20 @@ jobs:
 
           test -f data/chroma/chroma.sqlite3
 
-      - name: Build Docker image
-        run: docker build -t production-ai-service:ci .
-
       - name: Azure Login
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-          allow-no-subscriptions: true
 
       - name: Install Container Apps CLI extension
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: az extension add --name containerapp --upgrade
+
+      - name: Build Docker image
+        run: docker build -t production-ai-service:ci .
 
       - name: Login to Azure Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
